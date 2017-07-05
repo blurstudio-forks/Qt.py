@@ -420,6 +420,21 @@ def test_binding_states():
     assert Qt.IsPyQt4 == binding("PyQt4")
 
 
+def test_qtcompat_base_class():
+    """Tests to ensure the QtCompat namespace object works as expected"""
+    import sys
+    import Qt
+    from Qt.QtWidgets import QHeaderView, QApplication
+    from Qt import QtCompat
+    app = QApplication(sys.argv)
+    header = QHeaderView(Qt.QtCore.Qt.Horizontal)
+
+    # Spot check compatibility functions
+    QtCompat.QHeaderView.setSectionsMovable(header, False)
+    assert QtCompat.QHeaderView.sectionsMovable(header) == False
+    QtCompat.QHeaderView.setSectionsMovable(header, True)
+    assert QtCompat.QHeaderView.sectionsMovable(header) == True
+
 def test_cli():
     """Qt.py is available from the command-line"""
     env = os.environ.copy()
