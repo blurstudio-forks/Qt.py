@@ -804,6 +804,20 @@ def _pyside2():
         Qt.QtCompat.setSectionResizeMode = \
             Qt._QtWidgets.QHeaderView.setSectionResizeMode
 
+        class QHeaderView(object):
+            sectionResizeMode = Qt._QtWidgets.QHeaderView.sectionResizeMode
+            setSectionResizeMode = \
+                Qt._QtWidgets.QHeaderView.setSectionResizeMode
+            sectionsMovable = Qt._QtWidgets.QHeaderView.sectionsMovable
+            setSectionsMovable = Qt._QtWidgets.QHeaderView.setSectionsMovable
+        Qt.QtCompat.QHeaderView = QHeaderView
+
+        class QFileDialog(object):
+            getOpenFileName = Qt._QtWidgets.QFileDialog.getOpenFileName
+            getOpenFileNames = Qt._QtWidgets.QFileDialog.getOpenFileNames
+            getSaveFileName = Qt._QtWidgets.QFileDialog.getSaveFileName
+        Qt.QtCompat.QFileDialog = QFileDialog
+
     _reassign_misplaced_members("pyside2")
 
 
@@ -835,6 +849,19 @@ def _pyside():
         setattr(Qt, "_QtWidgets", Qt._QtGui)
 
         Qt.QtCompat.setSectionResizeMode = Qt._QtGui.QHeaderView.setResizeMode
+
+        class QHeaderView(object):
+            sectionResizeMode = Qt._QtWidgets.QHeaderView.resizeMode
+            setSectionResizeMode = Qt._QtWidgets.QHeaderView.setResizeMode
+            sectionsMovable = Qt._QtWidgets.QHeaderView.isMovable
+            setSectionsMovable = Qt._QtWidgets.QHeaderView.setMovable
+        Qt.QtCompat.QHeaderView = QHeaderView
+
+        class QFileDialog(object):
+            getOpenFileName = Qt._QtWidgets.QFileDialog.getOpenFileName
+            getOpenFileNames = Qt._QtWidgets.QFileDialog.getOpenFileNames
+            getSaveFileName = Qt._QtWidgets.QFileDialog.getSaveFileName
+        Qt.QtCompat.QFileDialog = QFileDialog
 
     if hasattr(Qt, "_QtCore"):
         Qt.__qt_version__ = Qt._QtCore.qVersion()
@@ -882,6 +909,20 @@ def _pyqt5():
     if hasattr(Qt, "_QtWidgets"):
         Qt.QtCompat.setSectionResizeMode = \
             Qt._QtWidgets.QHeaderView.setSectionResizeMode
+
+        class QHeaderView(object):
+            sectionResizeMode = Qt._QtWidgets.QHeaderView.sectionResizeMode
+            setSectionResizeMode = \
+                Qt._QtWidgets.QHeaderView.setSectionResizeMode
+            sectionsMovable = Qt._QtWidgets.QHeaderView.sectionsMovable
+            setSectionsMovable = Qt._QtWidgets.QHeaderView.setSectionsMovable
+        Qt.QtCompat.QHeaderView = QHeaderView
+
+        class QFileDialog(object):
+            getOpenFileName = Qt._QtWidgets.QFileDialog.getOpenFileName
+            getOpenFileNames = Qt._QtWidgets.QFileDialog.getOpenFileNames
+            getSaveFileName = Qt._QtWidgets.QFileDialog.getSaveFileName
+        Qt.QtCompat.QFileDialog = QFileDialog
 
     _reassign_misplaced_members("pyqt5")
 
@@ -947,6 +988,34 @@ def _pyqt4():
 
         Qt.QtCompat.setSectionResizeMode = \
             Qt._QtGui.QHeaderView.setResizeMode
+
+        class QHeaderView(object):
+            sectionResizeMode = Qt._QtWidgets.QHeaderView.resizeMode
+            setSectionResizeMode = Qt._QtWidgets.QHeaderView.setResizeMode
+            sectionsMovable = Qt._QtWidgets.QHeaderView.isMovable
+            setSectionsMovable = Qt._QtWidgets.QHeaderView.setMovable
+        Qt.QtCompat.QHeaderView = QHeaderView
+
+        class QFileDialog(object):
+            def _returnFilter(some_function):
+                """ decorator that makes PyQt4 return conform to other bindings
+                """
+                def wrapper(*args, **kwargs):
+                    ret = (some_function(*args, **kwargs))
+                    # PyQt4 only returns the selected filename
+                    # force the return to conform to all other bindings
+                    return (ret, '')
+                # preserve docstring and name of original function
+                wrapper.__doc__ = some_function.__doc__
+                wrapper.__name__ = some_function.__name__
+                return staticmethod(wrapper)
+            getOpenFileName = \
+                _returnFilter(Qt._QtWidgets.QFileDialog.getOpenFileName)
+            getOpenFileNames = \
+                _returnFilter(Qt._QtWidgets.QFileDialog.getOpenFileNames)
+            getSaveFileName = \
+                _returnFilter(Qt._QtWidgets.QFileDialog.getSaveFileName)
+        Qt.QtCompat.QFileDialog = QFileDialog
 
     if hasattr(Qt, "_QtCore"):
         Qt.__binding_version__ = Qt._QtCore.PYQT_VERSION_STR
