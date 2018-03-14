@@ -64,7 +64,7 @@ True
 
 I had been using the id as an index into a list. But the unexpected return value from PyQt4 broke it by being invalid. The workaround was to always check that the returned id was between 0 and the max size I expect.  
 
-- @justinfx
+\- @justinfx
 
 
 <br>
