@@ -679,10 +679,10 @@ def test_qtcompat_base_class():
     QtCompat.QHeaderView.setSectionsMovable(header, True)
     assert QtCompat.QHeaderView.sectionsMovable(header) is True
 
-    # Verify that the compatibility methods were created
-    # These gui methods are not something we may be able to run tests on.
-    assert QtCompat.QWidget.grab
-    assert QtCompat.QScreen.grabWindow
+    # Verify that the grab function actually generates a non-null image
+    button = QtWidgets.QPushButton('TestImage')
+    pixmap = QtCompat.QWidget.grab(button)
+    assert not pixmap.isNull()
 
 
 def test_cli():
