@@ -364,7 +364,7 @@ PySide and PyQt4:
 >>> from Qt import QtGui, QtWidgets
 >>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = QtGui.Pixmap.grabWidget(button)
+>>> pixmap = QtGui.QPixmap.grabWidget(button)
 ```
 
 PySide2 and PyQt5
