@@ -373,7 +373,7 @@ PySide2 and PyQt5
 >>> from Qt import QtGui, QtWidgets
 >>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = button.grabWidget()
+>>> pixmap = button.grab()
 ```
 
 ##### Workaround
@@ -385,5 +385,5 @@ Use compatibility wrapper.
 >>> from Qt import QtCompat, QtWidgets
 >>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = QtCompat.QWidget.grabWidget(button)
+>>> pixmap = QtCompat.QWidget.grab(button)
 ```
