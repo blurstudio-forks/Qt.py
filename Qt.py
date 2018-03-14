@@ -764,6 +764,9 @@ _compatibility_members = {
         "QWidget": {
             "grab": "QtWidgets.QWidget.grab",
         },
+        "QScreen": {
+            "grabWindow": "QtGui.QPixmap.grabWindow",
+        },
         "QHeaderView": {
             "sectionsClickable": "QtWidgets.QHeaderView.sectionsClickable",
             "setSectionsClickable":
@@ -783,6 +786,9 @@ _compatibility_members = {
     "PyQt5": {
         "QWidget": {
             "grab": "QtWidgets.QWidget.grab",
+        },
+        "QScreen": {
+            "grabWindow": "QtGui.QScreen.grabWindow",
         },
         "QHeaderView": {
             "sectionsClickable": "QtWidgets.QHeaderView.sectionsClickable",
@@ -804,6 +810,9 @@ _compatibility_members = {
         "QWidget": {
             "grab": "QtWidgets.QPixmap.grabWidget",
         },
+        "QScreen": {
+            "grabWindow": "QtWidgets.QPixmap.grabWindow",
+        },
         "QHeaderView": {
             "sectionsClickable": "QtWidgets.QHeaderView.isClickable",
             "setSectionsClickable": "QtWidgets.QHeaderView.setClickable",
@@ -821,6 +830,9 @@ _compatibility_members = {
     "PyQt4": {
         "QWidget": {
             "grab": "QtWidgets.QPixmap.grabWidget",
+        },
+        "QScreen": {
+            "grabWindow": "QtGui.QPixmap.grabWindow",
         },
         "QHeaderView": {
             "sectionsClickable": "QtWidgets.QHeaderView.isClickable",
