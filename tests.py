@@ -681,7 +681,7 @@ def test_qtcompat_base_class():
 
     # Verify that the compatibility methods were created
     # These gui methods are not something we may be able to run tests on.
-    assert QtCompat.QWidget.get
+    assert QtCompat.QWidget.grab
     assert QtCompat.QScreen.grabWindow
 
 
