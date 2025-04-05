@@ -1,6 +1,7 @@
 import os
 import pkgutil
 import json
+import platform
 from optparse import OptionParser
 from functools import reduce
 from pprint import pprint
@@ -214,5 +215,17 @@ if __name__ == '__main__':
             pprint(sorted_members)
 
         # Write to disk
-        filepath = PREFIX + '/' + binding.__name__ + '.json'
+        if "TOX_NAME" in os.environ:
+            # If using tox, save the file into the .members folder with python
+            # and Qt version information.
+            if 'PySide' in options.binding:
+                version = binding.__version__
+            else:
+                version = binding.QtCore.PYQT_VERSION_STR
+            pyver = platform.python_version()
+            filepath = "./.members/{}-{}_py-{}.json".format(
+                binding.__name__, version, pyver
+            )
+        else:
+            filepath = PREFIX + '/' + binding.__name__ + '.json'
         write_json(sorted_members, filepath)
