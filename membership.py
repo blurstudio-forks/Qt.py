@@ -1,3 +1,4 @@
+import csv
 import os
 import pkgutil
 import json
@@ -43,6 +44,31 @@ def write_json(dictionary, filename):
     print('--> Wrote ' + filename.name)
 
 
+def write_csv(rows, filename, headers=None):
+    """Write list of rows to csv file"""
+    filename.parent.mkdir(exist_ok=True)
+    with filename.open('w', newline='') as data_file:
+        writer = csv.writer(data_file)
+        if headers:
+            writer.writerow(headers)
+        writer.writerows(rows)
+    print('--> Wrote ' + filename.name)
+
+
+def write_markdown_table(rows, filename, headers=None):
+    """Generate a text file that's easy to read and supported by github markdown"""
+    try:
+        from tabulate import tabulate
+    except ImportError:
+        print('WARNING: Not creating nice table "tabulate" not installed.')
+        return
+
+    table = tabulate(rows, headers=headers, tablefmt="github")
+    with filename.open('w') as data_file:
+        data_file.write(table)
+    print('--> Wrote ' + filename.name)
+
+
 def compare(dicts):
     """Combine the contents of a dict of multiple Qt bindings member mappings.
 
@@ -73,6 +99,34 @@ def compare(dicts):
     return ret
 
 
+def membership_table(binding_maps):
+    rows = {}
+    headers = ["Module", "Class"] + list(binding_maps.keys())
+    columns = len(binding_maps)
+
+    def add_item(module_name, member, column):
+        if member:
+            member_id = f"{module_name}:{member}"
+        else:
+            member_id = module_name
+        if member_id not in rows:
+            # Create row if not already existing
+            rows[member_id] = [module_name, member] + [""] * columns
+        # Add a X for the binding column
+        rows[member_id][column] = "X"
+
+    for binding, classes in binding_maps.items():
+        column = headers.index(binding)
+        for module_name in classes:
+            # Add a row for each module
+            add_item(module_name, "", column)
+            # Add a row for each class
+            for member in classes[module_name]:
+                add_item(module_name, member, column)
+
+    return rows, headers
+
+
 def members_for_binding_names(binding_names, memberships):
     """Filter memberships by a list of Qt binding names.
 
@@ -93,28 +147,59 @@ def clean_common_members():
         f.unlink()
 
 
+def write_member_files(memberships, json_name=None, csv_name=None, markdown_name=None):
+    """Write the various files showing Qt binding membership.
+
+    The table files contain a row for each member. A column is added for each
+    Qt binding with a X if that binding implements that member.
+
+    Args:
+        memberships: A dict of binding memberships loaded from the .json files
+            created for each QT binding.
+        json_name: Contains the members common to all provided memberships.
+        csv_name: Table of members written in csv for easy import into spreadsheets.
+        markdown_name: Table of members formatted to be easily human readable and
+            supported by github markdown.
+    """
+    if json_name:
+        filename = MEMBERSHIP_PATH / json_name
+        common_members = compare(memberships)
+        write_json(common_members, filename)
+
+    members, headers = membership_table(memberships)
+    members = sorted(members.values())
+    if csv_name:
+        filename = MEMBERSHIP_PATH / csv_name
+        write_csv(members, filename, headers)
+
+    if markdown_name:
+        filename = MEMBERSHIP_PATH / markdown_name
+        write_markdown_table(members, filename, headers)
+
+
 def generate_common_members():
-    """Generate JSON with commonly shared members"""
+    """Generate files with commonly shared members"""
 
     memberships = {}
     for f in MEMBERSHIP_PATH.glob("Py*.*_py-*.json"):
         memberships[f.stem] = read_json(f)
 
     # Generate a mapping of all common members
-    common_members = compare(memberships)
-    write_json(common_members, MEMBERSHIP_PATH / "common_members.json")
+    write_member_files(memberships, "common_members.json", "members.csv", "members.md")
 
     # Generate a mapping of all common Qt5 members
     qt5_common = members_for_binding_names(BINDING_NAMES_QT5, memberships)
     if qt5_common:
-        common_members = compare(qt5_common)
-        write_json(common_members, MEMBERSHIP_PATH / "common_members_qt5.json")
+        write_member_files(
+            memberships, "common_members_qt5.json", "members_qt5.csv", "members_qt5.md"
+        )
 
     # Generate a mapping of all common Qt6 members
     qt6_common = members_for_binding_names(BINDING_NAMES_QT6, memberships)
     if qt6_common:
-        common_members = compare(qt6_common)
-        write_json(common_members, MEMBERSHIP_PATH / "common_members_qt6.json")
+        write_member_files(
+            memberships, "common_members_qt6.json", "members_qt6.csv", "members_qt6.md"
+        )
 
 
 if __name__ == '__main__':

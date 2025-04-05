@@ -8,4 +8,6 @@ test_caveats.py
 .vscode
 .idea
 .tox
+.members/*.csv
 .members/*.json
+.members/*.md
