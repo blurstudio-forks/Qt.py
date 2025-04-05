@@ -7,3 +7,5 @@ test_caveats.py
 # Development
 .vscode
 .idea
+.tox
+.members/*.json
