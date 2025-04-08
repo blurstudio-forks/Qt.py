@@ -666,7 +666,7 @@ def _wrapinstance(ptr, base=None):
     assert (base is None) or issubclass(base, Qt.QtCore.QObject), (
         "Argument 'base' must be of type <QObject>")
 
-    if Qt.IsPyQt4 or Qt.IsPyQt5:
+    if Qt.IsPyQt4 or Qt.IsPyQt5 or Qt.IsPyQt6:
         func = getattr(Qt, "_sip").wrapinstance
     elif Qt.IsPySide2:
         func = getattr(Qt, "_shiboken2").wrapInstance
