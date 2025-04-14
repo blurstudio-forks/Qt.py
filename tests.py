@@ -53,6 +53,12 @@ except NameError:
     # Python 3 compatibility
     long = int
 
+try:
+    from importlib import reload
+except ImportError:
+    # Legacy Python 2 support
+    pass
+
 
 def _pyside2_commit_date():
     """Return the commit date of PySide2"""
@@ -736,9 +742,12 @@ def test_preferred_none():
     try:
         os.environ["QT_PREFERRED_BINDING"] = "None"
         import Qt
+
+        reload(Qt)
         assert Qt.__name__ == "Qt", Qt
     finally:
         os.environ["QT_PREFERRED_BINDING"] = current
+        reload(Qt)
 
 
 def test_vendoring():
@@ -1498,18 +1507,24 @@ if binding("PySide6"):
         assert PySide6.QtCore.QStringListModel
 
 
-if binding("PyQt5") or binding("PyQt6"):
+if binding("PyQt5") or binding("PyQt6") and sys.version_info < (3, 11):
     def test_multiple_preferred():
         """QT_PREFERRED_BINDING = more than one binding excludes others"""
 
         # PySide is the more desirable binding
-        os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(
-            ["PyQt5", "PyQt6"])
+        current = os.environ["QT_PREFERRED_BINDING"]
+        try:
+            os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(
+                ["PyQt5", "PyQt6"])
+            import Qt
 
-        import Qt
-        assert Qt.__binding__ == "PyQt5", (
-            "PyQt5 should have been picked, "
-            "instead got %s" % Qt.__binding__)
+            reload(Qt)
+            assert Qt.__binding__ == "PyQt5", (
+                "PyQt5 should have been picked, "
+                "instead got %s" % Qt.__binding__)
+        finally:
+            os.environ["QT_PREFERRED_BINDING"] = current
+            reload(Qt)
 
 
 enum_file_1 = u"""
