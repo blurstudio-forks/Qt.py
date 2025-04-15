@@ -1570,13 +1570,13 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             fle.write(enum_file_2)
 
         cmd = [sys.executable, code_path, old_code_dir]
-        output = subprocess.check_output(cmd, cwd=self.tempdir, text=True)
+        output = subprocess.check_output(cmd, cwd=self.tempdir, universal_newlines=True)
 
         assert enum_check in output
 
         # Test actually updating the files.
         cmd.append("--write")
-        output = subprocess.check_output(cmd, cwd=self.tempdir, text=True)
+        output = subprocess.check_output(cmd, cwd=self.tempdir, universal_newlines=True)
         assert enum_check in output
 
         check = enum_file_1.replace("WindowActive", "WindowState.WindowActive")
@@ -1599,7 +1599,7 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
@@ -1620,7 +1620,7 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
@@ -1644,7 +1644,7 @@ if binding("PySide6") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
