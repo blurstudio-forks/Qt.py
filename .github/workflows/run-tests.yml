@@ -53,5 +53,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run tests in Docker container
-        run: bash ./build_membership.sh
+      - name: Run tests in bash
+        # run: bash ./build_membership.sh
+        run: docker run -ti --rm -v $(pwd):/Qt.py --entrypoint="python2.7" fredrikaverpil/qt.py:2018 /Qt.py/membership.py --binding=PySide
