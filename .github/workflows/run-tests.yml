@@ -46,3 +46,12 @@ jobs:
             -v $(pwd):/Qt.py \
             -e PYTHON=${{ matrix.PYTHON }} \
             fredrikaverpil/qt.py:${{ matrix.VFXPLATFORM }}
+
+  membership:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests in Docker container
+        run: ./build_membership.sh
