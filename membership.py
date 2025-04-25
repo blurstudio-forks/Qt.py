@@ -1,9 +1,9 @@
 import os
 import pkgutil
 import json
+import platform
 from optparse import OptionParser
 from functools import reduce
-from pprint import pprint
 
 
 # This is where all files are read from and saved to
@@ -211,7 +211,15 @@ if __name__ == '__main__':
 
         if QT_VERBOSE:
             # Debug
-            pprint(sorted_members)
+            if 'PySide' in options.binding:
+                qtver = binding.__version__
+            else:
+                qtver = binding.QtCore.PYQT_VERSION_STR
+            print("Qt Binding: {}-{}_py-{}".format(
+                    options.binding, qtver, platform.python_version()
+                )
+            )
+            print(json.dumps(sorted_members, indent=4))
 
         # Write to disk
         filepath = PREFIX + '/' + binding.__name__ + '.json'
