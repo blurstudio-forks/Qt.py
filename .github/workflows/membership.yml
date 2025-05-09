@@ -1,0 +1,91 @@
+---
+name: Membership
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  membership:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        test_env: [
+          # Enable these to inspect older VFX Platform requirements
+          # 'membership-20{20,21,22}-{PySide2,PyQt5}',
+          # 'membership-2024-{PySide6,PyQt6}',
+
+          # The latest Qt5 VFX platform requirement.
+          # These are passed to tox -e with `membership-` prepended.
+          '2023-PySide2',
+          '2023-PyQt5',
+          '2025-PySide6',
+          '2025-PyQt6',
+        ]
+
+    env:
+      QT_QPA_PLATFORM: minimal
+      QT_VERBOSE: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup tox
+        uses: ./.github/actions/setup-tox
+
+      - name: Run Tox
+        run: |
+          which tox
+          tox -e membership-${{ matrix.test_env }}
+
+      - name: Upload binding membership
+        uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.test_env }}
+          path: .members/*.json
+          include-hidden-files: true
+          retention-days: 1
+
+  membership-end:
+    runs-on: ubuntu-22.04
+    needs: membership
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          python -m pip install tox
+
+      - name: Download membership artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .members/
+          pattern: part-*
+          merge-multiple: true
+
+      - name: Run Tox
+        run: |
+          tox -e membership-end
+
+      - name: Upload membership report
+        uses: actions/upload-artifact@v4
+        with:
+          name: membership-report
+          path: |
+            .members/*
+            .members/*.md
+          include-hidden-files: true

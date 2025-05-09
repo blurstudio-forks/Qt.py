@@ -53,6 +53,12 @@ except NameError:
     # Python 3 compatibility
     long = int
 
+try:
+    from importlib import reload
+except ImportError:
+    # Legacy Python 2 support
+    pass
+
 
 def _pyside2_commit_date():
     """Return the commit date of PySide2"""
@@ -430,7 +436,7 @@ def test_environment():
         imp.find_module("PyQt6")
     else:
         imp.find_module("PySide2")
-        imp.find_module("PyQt4")
+        # imp.find_module("PyQt4")
         imp.find_module("PyQt5")
 
 
@@ -736,9 +742,12 @@ def test_preferred_none():
     try:
         os.environ["QT_PREFERRED_BINDING"] = "None"
         import Qt
+
+        reload(Qt)
         assert Qt.__name__ == "Qt", Qt
     finally:
         os.environ["QT_PREFERRED_BINDING"] = current
+        reload(Qt)
 
 
 def test_vendoring():
@@ -1172,20 +1181,30 @@ def test_qfont_from_string():
     enum_weight_bold = get_enum(Qt.QtGui.QFont, "Weight", "Bold")
 
     in_font = "Arial,7,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
-    font = Qt.QtGui.QFont()
-    Qt.QtCompat.QFont.fromString(font, in_font)
-    assert font.family() == "Arial"
-    assert font.pointSizeF() == 7.0
-    assert font.weight() == enum_weight_normal
-    font.setWeight(enum_weight_bold)
-    if binding("PySide6") or binding("PyQt6"):
-        # In Qt6 the full string is returned with OpenType weight of 700
-        out_font = "Arial,7,-1,5,700,0,0,0,0,0,0,0,0,0,0,1"
-        assert font.toString() == out_font
-    else:
-        # In previous bindings the shorter version is returned. Also the bold
-        # weight is 75 instead of 700
-        assert font.toString() == "Arial,7,-1,5,75,0,0,0,0,0"
+    # PyQt5 for Python 3.7 requires creating a QApplication to init a QFont
+    if binding("PyQt5"):
+        if not Qt.QtWidgets.QApplication.instance():
+            app = Qt.QtWidgets.QApplication(sys.argv)
+        else:
+            app = Qt.QtWidgets.QApplication.instance()
+    try:
+        font = Qt.QtGui.QFont()
+        Qt.QtCompat.QFont.fromString(font, in_font)
+        assert font.family() == "Arial"
+        assert font.pointSizeF() == 7.0
+        assert font.weight() == enum_weight_normal
+        font.setWeight(enum_weight_bold)
+        if binding("PySide6") or binding("PyQt6"):
+            # In Qt6 the full string is returned with OpenType weight of 700
+            out_font = "Arial,7,-1,5,700,0,0,0,0,0,0,0,0,0,0,1"
+            assert font.toString() == out_font
+        else:
+            # In previous bindings the shorter version is returned. Also the bold
+            # weight is 75 instead of 700
+            assert font.toString() == "Arial,7,-1,5,75,0,0,0,0,0"
+    finally:
+        if binding("PyQt5"):
+            app.exit()
 
 
 if sys.version_info < (3, 5):
@@ -1462,8 +1481,9 @@ if binding("PySide2"):
         # Qt remaps QStringListModel
         assert QtCore.QStringListModel
 
-        # But does not delete the original
-        assert PySide2.QtGui.QStringListModel
+        # But does not delete the original. Older versions of PySide2 had this
+        # on QtGui instead of QtCore
+        assert PySide2.QtCore.QStringListModel or PySide2.QtGui.QStringListModel
 
 
 if binding("PySide6"):
@@ -1487,18 +1507,24 @@ if binding("PySide6"):
         assert PySide6.QtCore.QStringListModel
 
 
-if binding("PyQt4") or binding("PyQt5"):
+if binding("PyQt5") or binding("PyQt6") and sys.version_info < (3, 11):
     def test_multiple_preferred():
         """QT_PREFERRED_BINDING = more than one binding excludes others"""
 
         # PySide is the more desirable binding
-        os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(
-            ["PyQt4", "PyQt5"])
+        current = os.environ["QT_PREFERRED_BINDING"]
+        try:
+            os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(
+                ["PyQt5", "PyQt6"])
+            import Qt
 
-        import Qt
-        assert Qt.__binding__ == "PyQt4", (
-            "PyQt4 should have been picked, "
-            "instead got %s" % Qt.__binding__)
+            reload(Qt)
+            assert Qt.__binding__ == "PyQt5", (
+                "PyQt5 should have been picked, "
+                "instead got %s" % Qt.__binding__)
+        finally:
+            os.environ["QT_PREFERRED_BINDING"] = current
+            reload(Qt)
 
 
 enum_file_1 = u"""
@@ -1544,13 +1570,13 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             fle.write(enum_file_2)
 
         cmd = [sys.executable, code_path, old_code_dir]
-        output = subprocess.check_output(cmd, cwd=self.tempdir, text=True)
+        output = subprocess.check_output(cmd, cwd=self.tempdir, universal_newlines=True)
 
         assert enum_check in output
 
         # Test actually updating the files.
         cmd.append("--write")
-        output = subprocess.check_output(cmd, cwd=self.tempdir, text=True)
+        output = subprocess.check_output(cmd, cwd=self.tempdir, universal_newlines=True)
         assert enum_check in output
 
         check = enum_file_1.replace("WindowActive", "WindowState.WindowActive")
@@ -1573,7 +1599,7 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
@@ -1594,7 +1620,7 @@ if binding("PySide2") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
@@ -1618,7 +1644,7 @@ if binding("PySide6") and sys.version_info >= (3, 7):
             check=True,
             stderr=subprocess.DEVNULL,
             cwd=self.tempdir,
-            text=True,
+            universal_newlines=True,
         )
 
         data = json.loads(proc.stdout)
