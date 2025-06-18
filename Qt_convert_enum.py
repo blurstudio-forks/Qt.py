@@ -20,6 +20,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 def qt_for_binding(binding):
@@ -52,6 +53,7 @@ class QtEnumConverter:
         # The mapping of short to fully qualified enum names. Used to
         # update python scripts.
         self.enum_map: dict[str, str] = {}
+        self.partial_enum: Optional[re.Pattern] = None
         # Module level view of all the enums also used to check for naming
         # conflicts where the short name maps to multiple long names.
         self.enum_module: dict[str, dict[str, list[str]]] = {}
@@ -145,7 +147,39 @@ class QtEnumConverter:
             f.write(content)
         return
 
-    def convert_all(self, directory: Path, dry_run: bool) -> None:
+    def find_partials(self, filepath: Path, root: Path) -> None:
+        """Find and report potential partial Enum uses
+
+        We can't automatically replace them as this has a high likelihood of
+        false positives.
+        """
+        if not self.enum_map:
+            self.enums_for_qt_py()
+
+        if not self.partial_enum:
+            enums = {v.split('.')[-1] for v in self.enum_map.values()}
+            self.partial_enum = re.compile(fr"\.({'|'.join(enums)})(?!\w)")
+
+        # Read the content
+        with filepath.open('r', encoding='utf-8', newline='\n', errors='replace') as f:
+            content = f.readlines()
+
+        relative = filepath.relative_to(root)
+        for ln, line in enumerate(content):
+            clean_line = line.rstrip()
+            matches = set()
+            for v in self.enum_map.values():
+                clean_line = clean_line.replace(v, "")
+
+            for match in self.partial_enum.findall(clean_line):
+                matches.add(match)
+            if matches:
+                print(f'File: "{relative}", line:{ln + 1}, for {", ".join(matches)}')
+                print(f'    {line.strip()}')
+
+    def convert_all(
+        self, directory: Path, dry_run: bool, partial: bool = False
+    ) -> None:
         """Search and replace all enums."""
         ignored = [directory / i for i in self.ignored]
         # Using os.walk instead of pathlib's walk to support older python's
@@ -170,7 +204,10 @@ class QtEnumConverter:
                     continue
                 if self.verbosity >= 2:
                     print(f"Checking: {filepath}")
-                self.convert_enums_in_file(filepath, directory, dry_run)
+                if partial:
+                    self.find_partials(filepath, directory)
+                else:
+                    self.convert_enums_in_file(filepath, directory, dry_run)
                 continue
 
 
@@ -245,6 +282,13 @@ def parse_args():
         "names. dups requires PySide6 and the others require PySide2 installed.",
     )
     parser.add_argument(
+        "--partial",
+        action="store_true",
+        help="Report any potential enum uses that can not be automatically fixed. "
+        "This can happen if the code accesses enums from the instance instead of "
+        "directly from the class name.",
+    )
+    parser.add_argument(
         '-v',
         '--verbosity',
         action='count',
@@ -291,4 +335,4 @@ if __name__ == "__main__":
         print(json.dumps(mappings, indent=4, sort_keys=True))
     else:
         # Search .py files and update to fully qualified enum names
-        mapper.convert_all(args.target, dry_run=not args.write)
+        mapper.convert_all(args.target, dry_run=not args.write, partial=args.partial)
