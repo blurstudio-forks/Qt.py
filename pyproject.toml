@@ -1,0 +1,76 @@
+[build-system]
+# Supports python 3.7 building
+requires = ["setuptools <= 68.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Qt.py"
+description = """\
+    Python 2 & 3 compatibility wrapper around all Qt bindings - \
+    PySide, PySide2, PyQt4 and PyQt5.\
+"""
+authors = [{name = "Marcus Ottosson", email = "konstruktion@gmail.com"}]
+dependencies = ["types-PySide2"]
+dynamic = ["version"]
+license = {text = "MIT"}
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    # "Programming Language :: Python :: 3.11",
+    # "Programming Language :: Python :: 3.12",
+    # "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities"
+]
+
+[project.optional-dependencies]
+dev = [
+    "Flake8-pyproject",
+    "tox",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/mottosso/Qt"
+Source = "https://github.com/mottosso/Qt"
+Repository = "https://github.com/mottosso/Qt"
+Issues = "https://github.com/mottosso/Qt.py/issues"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools.dynamic]
+# Use ast parser to pull version from its source in Qt.py
+version = {attr = "Qt.__version__"}
+
+# These options configure flake8. They are only respected if you have the
+# Flake8-pyproject pip package installed as well.
+[flake8]
+select = ["B", "C", "E", "F", "N", "W", "B9"]
+extend-ignore = [
+    "E203",
+    "E501",
+    "E722",
+    "W503",
+]
+max-line-length = 88
+exclude = [
+    "*.egg-info",
+    "*.pyc",
+    ".cache",
+    ".eggs",
+    ".git",
+    ".tox",
+    "__pycache__",
+    "build",
+    "dist",
+]
