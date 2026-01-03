@@ -15,6 +15,7 @@ Qt.py enables you to write software that runs on any of the 6 supported bindings
 
 | Date     | Version   | Event
 |:---------|:----------|:----------
+| Jan 2025 | [2.1.0][] | Dropped support for Qt versions older than 5.15
 | Jan 2025 | [2.0.0][] | Dropped support for Qt 4 and python versions older than 3.7
 | May 2024 | [1.4.1][] | Added support for Qt 6
 | Jan 2024 | [1.3.9][] | Run CI on Github Actions, instead of Travis CI.
