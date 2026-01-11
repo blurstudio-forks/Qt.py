@@ -51,7 +51,7 @@ def update_compatibility_members(members):
 
 
 def update_compatibility_decorators(binding, decorators):
-    """ This optional function is called by Qt.py to modify the decorators
+    """This optional function is called by Qt.py to modify the decorators
     applied to QtCompat namespace objects.
 
     Arguments:
@@ -67,6 +67,7 @@ def update_compatibility_decorators(binding, decorators):
             # Modifies the returned value so we can test that the
             # decorator works.
             return "Test: {}".format(ret)
+
         # preserve docstring and name of original function
         wrapper.__doc__ = some_function.__doc__
         wrapper.__name__ = some_function.__name__
@@ -79,13 +80,13 @@ def update_compatibility_decorators(binding, decorators):
             # Modifies the returned value so we can test that the
             # decorator works.
             return "QMainWindow Test: {}".format(ret)
+
         # preserve docstring and name of original function
         wrapper.__doc__ = some_function.__doc__
         wrapper.__name__ = some_function.__name__
         return wrapper
-    decorators.setdefault("QWidget", {})["windowTitleDecorator"] = (
-        _widgetDecorator
-    )
+
+    decorators.setdefault("QWidget", {})["windowTitleDecorator"] = _widgetDecorator
     decorators.setdefault("QMainWindow", {})["windowTitleDecorator"] = (
         _mainWindowDecorator
     )
