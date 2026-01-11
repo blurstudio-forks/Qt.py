@@ -15,6 +15,7 @@ Qt.py enables you to write software that runs on any of the 6 supported bindings
 
 | Date     | Version   | Event
 |:---------|:----------|:----------
+| Jan 2025 | [2.0.0][] | Dropped support for Qt 4 and python versions older than 3.7
 | May 2024 | [1.4.1][] | Added support for Qt 6
 | Jan 2024 | [1.3.9][] | Run CI on Github Actions, instead of Travis CI.
 | Sep 2020 | [1.3.0][] | Stability improvements and greater ability for `QtCompat.wrapInstance` to do its job
@@ -200,7 +201,6 @@ These are the publicly facing environment variables that in one way or another a
 | QT_PREFERRED_BINDING_JSON | str   | Override order and content of binding to try. This can apply per Qt.py namespace.
 | QT_PREFERRED_BINDING      | str   | Override order and content of binding to try. Used if QT_PREFERRED_BINDING_JSON does not apply.
 | QT_VERBOSE                | bool  | Be a little more chatty about what's going on with Qt.py
-| QT_SIP_API_HINT           | int   | Sets the preferred SIP api version that will be attempted to set.
 
 <br>
 
@@ -661,6 +661,10 @@ python -m twine upload .\dist\*
 | `QAction().setShortcut(Qt.SHIFT\|Qt.Key_Backspace)` | `QAction().setShortcut(QKeySequence(Qt.Modifier.SHIFT\|Qt.Key.Key_Backspace))` | PyQt6 doesn't accept `QKeyCombination` objects for shortcuts. To work around this cast them to `QKeySequence` objects.
 | int(QMainWindow().windowState()) | QtCompat.enumValue(QMainWindow().windowState()) | Consistent interface to convert an enum to an `int`
 | | Submit your known issues here! |
+
+##### Removed Members (Qt.py\==2.\*)
+
+With the removal of support PySide and PyQt4 `Qt.QT_SIP_API_HINT` was removed. `Qt.IsPySide` and `Qt.IsPyQt4` remain for compatibility, but will always return `False` now.
 
 ##### Removed Members (Qt.py\==1.4.\*)
 
