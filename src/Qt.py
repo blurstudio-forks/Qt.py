@@ -49,7 +49,9 @@ import json
 __version__ = "2.1.0.dev1"
 
 # Enable support for `from Qt import *`
-__all__ = ["QtCompat"]
+__all__ = [
+    "QtCompat",  # noqa: F822
+]
 
 # Flags from environment variables
 QT_VERBOSE = bool(os.getenv("QT_VERBOSE"))
@@ -927,11 +929,11 @@ def _qInstallMessageHandler(handler):
 
 def _getcpppointer(object):
     if hasattr(Qt, "_shiboken6"):
-        return getattr(Qt, "_shiboken6").getCppPointer(object)[0]
+        return Qt._shiboken6.getCppPointer(object)[0]
     elif hasattr(Qt, "_shiboken2"):
-        return getattr(Qt, "_shiboken2").getCppPointer(object)[0]
+        return Qt._shiboken2.getCppPointer(object)[0]
     elif hasattr(Qt, "_sip"):
-        return getattr(Qt, "_sip").unwrapinstance(object)
+        return Qt._sip.unwrapinstance(object)
     raise AttributeError("'module' has no attribute 'getCppPointer'")
 
 
@@ -962,11 +964,11 @@ def _wrapinstance(ptr, base=None):
     )
 
     if Qt.IsPyQt5 or Qt.IsPyQt6:
-        func = getattr(Qt, "_sip").wrapinstance
+        func = Qt._sip.wrapinstance
     elif Qt.IsPySide2:
-        func = getattr(Qt, "_shiboken2").wrapInstance
+        func = Qt._shiboken2.wrapInstance
     elif Qt.IsPySide6:
-        func = getattr(Qt, "_shiboken6").wrapInstance
+        func = Qt._shiboken6.wrapInstance
     else:
         raise AttributeError("'module' has no attribute 'wrapInstance'")
 
@@ -1005,13 +1007,13 @@ def _isvalid(object):
 
     """
     if hasattr(Qt, "_shiboken6"):
-        return getattr(Qt, "_shiboken6").isValid(object)
+        return Qt._shiboken6.isValid(object)
 
     elif hasattr(Qt, "_shiboken2"):
-        return getattr(Qt, "_shiboken2").isValid(object)
+        return Qt._shiboken2.isValid(object)
 
     elif hasattr(Qt, "_sip"):
-        return not getattr(Qt, "_sip").isdeleted(object)
+        return not Qt._sip.isdeleted(object)
 
     else:
         raise AttributeError("'module' has no attribute isValid")
@@ -1026,10 +1028,10 @@ def _translate(context, sourceText, *args):
     # The middle argument can be encoding[QtCore.QCoreApplication.Encoding]
     try:
         app = Qt.QtCore.QCoreApplication
-    except AttributeError:
+    except AttributeError as exc:
         raise NotImplementedError(
             "Missing QCoreApplication implementation for {}".format(Qt.__binding__)
-        )
+        ) from exc
 
     def get_arg(index):
         try:
@@ -1083,7 +1085,7 @@ def _loadUi(uifile, baseinstance=None):
             context = error.__context__
             # Raise the exceptions that are consistent with the other bindings
             if isinstance(context, (IOError, ElementTree.ParseError)):
-                raise context
+                raise context  # noqa: B904
             # Otherwise raise the original PyQt6 specific exception.
             raise
 
@@ -1854,7 +1856,7 @@ def _build_compatibility_members(binding, decorators=None):
 
     """
 
-    decorators = decorators or dict()
+    decorators = decorators or {}
 
     # Allow optional site-level customization of the compatibility members.
     # This method does not need to be implemented in QtSiteConfig.
@@ -1911,7 +1913,7 @@ def _pyside6():
 
     """
 
-    import PySide6 as module
+    import PySide6 as module  # noqa: N813
 
     extras = []
     try:
@@ -1977,7 +1979,7 @@ def _pyside2():
 
     """
 
-    import PySide2 as module
+    import PySide2 as module  # noqa: N813
 
     extras = []
     try:
@@ -2029,7 +2031,7 @@ def _pyside2():
 def _pyqt6():
     """Initialise PyQt6"""
 
-    import PyQt6 as module
+    import PyQt6 as module  # noqa: N813
     from PyQt6 import sip
 
     Qt.QtCompat.enumValue = _enum_to_value
@@ -2064,7 +2066,7 @@ def _pyqt6():
 def _pyqt5():
     """Initialise PyQt5"""
 
-    import PyQt5 as module
+    import PyQt5 as module  # noqa: N813
     from PyQt5 import sip
 
     Qt.QtCompat.enumValue = _enum_to_int
@@ -2294,7 +2296,7 @@ def _install():
     if preferred_order is None:
         # If a json preferred binding was not used use, respect the
         # QT_PREFERRED_BINDING environment variable if defined.
-        preferred_order = list(b for b in QT_PREFERRED_BINDING.split(os.pathsep) if b)
+        preferred_order = [b for b in QT_PREFERRED_BINDING.split(os.pathsep) if b]
 
     order = preferred_order or default_order
 
