@@ -6,10 +6,7 @@ There are cases where Qt.py is not handling incompatibility issues.
 - [QtCore.QItemSelection](#qtcoreqitemselection)
 - [QtCore.Slot](#qtcoreslot)
 - [QtWidgets.QAction.triggered](#qtwidgetsqactiontriggered)
-- [QtWidgets.QHeaderView.setResizeMode](#qtwidgetsqheaderviewsetresizemode)
 - [QtWidgets.qApp](#qtwidgetsqapp)
-- [QtCompat.wrapInstance](#qtcompatwrapinstance)
-- [QtGui.QPixmap.grabWidget](#qtguiqpixmapgrabwidget)
 - [Fully Qualified Enums](#fully-qualified-enums)
 
 
@@ -160,60 +157,6 @@ TypeError: triggered() only accepts 0 argument(s), 1 given!
 <br>
 
 
-#### QtWidgets.QHeaderView.setResizeMode
-
-`setResizeMode` was [renamed](http://doc.qt.io/qt-5/qheaderview.html#setSectionResizeMode) `setSectionResizeMode` in Qt 5.
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtWidgets
->>> view = QtWidgets.QTreeWidget()
->>> header = view.header()
->>> header.setResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
-Traceback (most recent call last):
-...
-AttributeError: '...QHeaderView' object has no attribute 'setResizeMode'
-```
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtWidgets
->>> view = QtWidgets.QTreeWidget()
->>> header = view.header()
->>> header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
-```
-
-##### Workaround
-
-Use compatibility wrapper.
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtWidgets, QtCompat
->>> view = QtWidgets.QTreeWidget()
->>> header = view.header()
->>> QtCompat.QHeaderView.setSectionResizeMode(header, QtWidgets.QHeaderView.ResizeMode.Fixed)
-```
-
-Or a conditional.
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtWidgets, __binding__
->>> view = QtWidgets.QTreeWidget()
->>> header = view.header()
->>> if __binding__ in ("PyQt4", "PySide"):
-...   header.setResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
-... else:
-...   header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
-```
-
-Note: Qt.QtCompat.setSectionResizeMode is a older way this was handled and has been left in for now, but this will likely be removed in the future.
-
-
-<br>
-
-
 #### QtWidgets.qApp
 
 `qApp` is not included in Qt.py due to the way Qt keeps this up to date with the currently active QApplication.
@@ -244,47 +187,8 @@ True
 Note: this workaround is marked untested to prevent issues with the `qapp` marker. This test explicitly shows the creation of the instance instead of using `QApplication.instance()`.
 
 
-#### QtCompat.wrapInstance
+<br>
 
-~`QtCompat.wrapInstance` differs across `sip` and `shiboken` in subtle ways.~
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtCompat, QtWidgets
->>> button = QtWidgets.QPushButton("Hello world")
->>> button.setObjectName("MySpecialButton")
->>> pointer = QtCompat.getCppPointer(button)
->>> widget = QtCompat.wrapInstance(int(pointer))
->>> assert isinstance(widget, QtWidgets.QWidget), widget
->>> assert widget.objectName() == button.objectName()
->>> widget == button
-True
-```
-
-~Note the `False` for PySide2 and `True` for PyQt5.~
-
-#### QtGui.QPixmap.grabWidget
-
-~The method of capturing a widget to a pixmap changed between Qt4 and Qt5.~
-
-PySide2 and PyQt5
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtGui, QtWidgets
->>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = button.grab()
-```
-
-##### Workaround
-
-Use compatibility wrapper.
-
-```python
-# PySide2, PySide6, PyQt5, PyQt6, qapp
->>> from Qt import QtCompat, QtWidgets
->>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = QtCompat.QWidget.grab(button)
-```
 
 #### Fully Qualified Enums
 
