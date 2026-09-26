@@ -10,11 +10,11 @@ There are cases where Qt.py is not handling incompatibility issues.
 - [QtWidgets.qApp](#qtwidgetsqapp)
 - [QtCompat.wrapInstance](#qtcompatwrapinstance)
 - [QtGui.QPixmap.grabWidget](#qtguiqpixmapgrabwidget)
-- [QtCore.qInstallMessageHandler](#qtcoreqinstallmessagehandler)
 - [Fully Qualified Enums](#fully-qualified-enums)
 
+
 <br>
-<br>
+
 
 **Tests**
 
@@ -29,30 +29,29 @@ Code blocks in this document are automatically tested at each commit before bein
 1. Examples MUST be in [doctest](https://docs.python.org/3.13/library/doctest.html) format. See other caveats for samples.
 1. Examples MUST `import Qt` (where appropriate), NOT e.g. `import PyQt5`.
 1. Examples MAY include `untested` in which case the continuous integration mechanism will look the other way, e.g. `# PyQt6, untested`
-1. Examples MAY include `qapp` in which case a `QApplication` is created and destroyed for each test preventing interference with other tests., e.g. `# PyQt5, qapp`.
+1. Examples MAY include `qapp` in which case a `QApplication` is created (reusing one if it already exists) before the example runs, e.g. `# PyQt5, qapp`. Note `QApplication.exit()` does not destroy the singleton, so a `QApplication` created by any test (tagged `qapp` or not) persists for the rest of the process; any example that creates its own must reuse an existing instance (`QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)`) rather than assuming none exists yet.
 1. Ellipsis (...) can be used as a wildcard for return text checking, e.g. `AttributeError: type ...`.
 
 
-<br>
-<br>
 <br>
 
 
 #### QtGui.QAbstractItemModel.createIndex
 
-In PySide, somehow the last argument (the id) is allowed to be negative and is maintained. While in PyQt4 it gets coerced into an undefined unsigned value.
+In PySide2/6, if the last argument (the id) a Overflow error is raised. While in PyQt5/6 it gets coerced into an undefined unsigned value.
 
 ```python
-# PySide
+# PySide2, PySide6
 >>> from Qt import QtGui
 >>> model = QtGui.QStandardItemModel()
 >>> index = model.createIndex(0, 0, -1)
->>> int(index.internalId()) == -1
-True
+Traceback (most recent call last):
+...
+OverflowError: can't convert negative int to unsigned
 ```
 
 ```python
-# PyQt4
+# PyQt5, PyQt6
 >>> from Qt import QtGui
 >>> model = QtGui.QStandardItemModel()
 >>> index = model.createIndex(0, 0, -1)
@@ -68,29 +67,27 @@ I had been using the id as an index into a list. But the unexpected return value
 
 
 <br>
-<br>
-<br>
 
 
 #### QtCore.QItemSelection
 
-PySide has the `QItemSelection.isEmpty` and `QItemSelection.empty` attributes while PyQt4 only has the `QItemSelection.isEmpty` attribute.
+PySide2/6 has the `QItemSelection.isEmpty` and `QItemSelection.empty` attributes while PyQt5/6 only has the `QItemSelection.isEmpty` attribute.
 
 ```python
-# PySide2
+# PySide2, PySide6
 >>> from Qt import QtCore
 >>> func = QtCore.QItemSelection.isEmpty
 >>> func = QtCore.QItemSelection.empty
 ```
 
 ```python
-# PyQt5
+# PyQt5, PyQt6
 >>> from Qt import QtCore
 >>> func = QtCore.QItemSelection.isEmpty
 >>> func = QtCore.QItemSelection.empty
 Traceback (most recent call last):
 ...
-AttributeError: type object 'QItemSelection' has no attribute 'empty'
+AttributeError: type object 'QItemSelection' has no attribute 'empty'...
 ```
 
 ##### Workaround
@@ -98,15 +95,7 @@ AttributeError: type object 'QItemSelection' has no attribute 'empty'
 They both support the `len(selection)` operation.
 
 ```python
-# PyQt4
->>> from Qt import QtCore
->>> selection = QtCore.QItemSelection()
->>> len(selection)
-0
-```
-
-```python
-# PySide
+# PySide2, PySide6, PyQt5, PyQt6
 >>> from Qt import QtCore
 >>> selection = QtCore.QItemSelection()
 >>> len(selection)
@@ -114,23 +103,21 @@ They both support the `len(selection)` operation.
 ```
 
 
-<br>
-<br>
 <br>
 
 
 #### QtCore.Slot
 
-PySide allows for a `result=None` keyword param to set the return type. PyQt4 crashes:
+PySide2/6 allows for a `result=None` keyword param to set the return type. PyQt5/6 crashes:
 
 ```python
-# PySide
+# PySide2, PySide6
 >>> from Qt import QtCore, QtWidgets
 >>> slot = QtCore.Slot(QtWidgets.QWidget, result=None)
 ```
 
 ```python
-# PyQt4
+# PyQt5, PyQt6
 >>> from Qt import QtCore, QtWidgets
 >>> slot = QtCore.Slot(QtWidgets.QWidget)
 >>> slot = QtCore.Slot(QtWidgets.QWidget, result=None)
@@ -141,18 +128,14 @@ TypeError: bytes or ASCII string expected not 'NoneType'
 
 
 <br>
-<br>
-<br>
 
 
 #### QtWidgets.QAction.triggered
 
-PySide cannot accept any arguments. In PyQt4, `QAction.triggered` signal requires a bool arg.
-
-**Note**: This is not included on our tests, as we cannot reproduce this using PyQt4 4.11.4, CY2017. It's likely that this issue persists in e.g. Maya version < 2017.
+PySide2/6 cannot accept any arguments. In PyQt5/6, `QAction.triggered` signal can be passed arguments and doesn't return anything.
 
 ```python
-# PySide, untested
+# PySide2, PySide6, qapp
 >>> from Qt import QtCore, QtWidgets
 >>> obj = QtCore.QObject()
 >>> action = QtWidgets.QAction(obj)
@@ -161,24 +144,19 @@ True
 >>> action.triggered.emit(True)
 Traceback (most recent call last):
 ...
-TypeError: triggered() only accepts 0 arguments, 2 given!
+TypeError: triggered() only accepts 0 argument(s), 1 given!
 ```
 
 ```python
-# PyQt4, untested
+# PyQt5, PyQt6, qapp
 >>> from Qt import QtCore, QtWidgets
 >>> obj = QtCore.QObject()
 >>> action = QtWidgets.QAction(obj)
->>> action.triggered.emit(True)
 >>> action.triggered.emit()
-Traceback (most recent call last):
-...
-TypeError: QAction.triggered[bool] signal has 1 argument(s) but 0 provided
+>>> action.triggered.emit(True)
 ```
 
 
-<br>
-<br>
 <br>
 
 
@@ -187,27 +165,22 @@ TypeError: QAction.triggered[bool] signal has 1 argument(s) but 0 provided
 `setResizeMode` was [renamed](http://doc.qt.io/qt-5/qheaderview.html#setSectionResizeMode) `setSectionResizeMode` in Qt 5.
 
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
 >>> view = QtWidgets.QTreeWidget()
 >>> header = view.header()
->>> header.setResizeMode(QtWidgets.QHeaderView.Fixed)
+>>> header.setResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
 Traceback (most recent call last):
 ...
-AttributeError: 'PySide2.QtWidgets.QHeaderView' object has no attribute 'setResizeMode'
+AttributeError: '...QHeaderView' object has no attribute 'setResizeMode'
 ```
 
 ```python
-# PySide
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
 >>> view = QtWidgets.QTreeWidget()
 >>> header = view.header()
->>> header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-Traceback (most recent call last):
-...
-AttributeError: 'PySide.QtGui.QHeaderView' object has no attribute 'setSectionResizeMode'
+>>> header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
 ```
 
 ##### Workaround
@@ -215,32 +188,31 @@ AttributeError: 'PySide.QtGui.QHeaderView' object has no attribute 'setSectionRe
 Use compatibility wrapper.
 
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtWidgets, QtCompat
->>> app = QtWidgets.QApplication(sys.argv)
 >>> view = QtWidgets.QTreeWidget()
 >>> header = view.header()
->>> QtCompat.QHeaderView.setSectionResizeMode(header, QtWidgets.QHeaderView.Fixed)
+>>> QtCompat.QHeaderView.setSectionResizeMode(header, QtWidgets.QHeaderView.ResizeMode.Fixed)
 ```
 
 Or a conditional.
 
 ```python
-# PyQt5
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtWidgets, __binding__
->>> app = QtWidgets.QApplication(sys.argv)
 >>> view = QtWidgets.QTreeWidget()
 >>> header = view.header()
 >>> if __binding__ in ("PyQt4", "PySide"):
-...   header.setResizeMode(QtWidgets.QHeaderView.Fixed)
+...   header.setResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
 ... else:
-...   header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+...   header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
 ```
 
 Note: Qt.QtCompat.setSectionResizeMode is a older way this was handled and has been left in for now, but this will likely be removed in the future.
 
+
 <br>
-<br>
+
 
 #### QtWidgets.qApp
 
@@ -249,7 +221,7 @@ Note: Qt.QtCompat.setSectionResizeMode is a older way this was handled and has b
 Qt implicitly updates this variable through monkey patching whenever a new QApplication is instantiated. This means that our variable quickly goes out of date and is not updated at the same time.
 
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6
 >>> from Qt import QtWidgets
 >>> "qApp" in dir(QtWidgets)
 False
@@ -262,38 +234,23 @@ Use `QApplication.instance()` instead.
 Technically, there is no difference between the two, apart from more characters to type.
 
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6, untested
 >>> from Qt import QtWidgets
 >>> app = QtWidgets.QApplication(sys.argv)
 >>> app == QtWidgets.QApplication.instance()
 True
 ```
 
+Note: this workaround is marked untested to prevent issues with the `qapp` marker. This test explicitly shows the creation of the instance instead of using `QApplication.instance()`.
+
 
 #### QtCompat.wrapInstance
 
-`QtCompat.wrapInstance` differs across `sip` and `shiboken` in subtle ways.
-
-**Note**: This is not included on our tests, as we cannot reproduce this using PySide2 (build commit date `2017-08-25`), CY2018. It's likely that this issue persists in e.g. Maya version < 2018.
+~`QtCompat.wrapInstance` differs across `sip` and `shiboken` in subtle ways.~
 
 ```python
-# PySide2, untested
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtCompat, QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
->>> button = QtWidgets.QPushButton("Hello world")
->>> button.setObjectName("MySpecialButton")
->>> pointer = QtCompat.getCppPointer(button)
->>> widget = QtCompat.wrapInstance(int(pointer))
->>> assert isinstance(widget, QtWidgets.QWidget), widget
->>> assert widget.objectName() == button.objectName()
->>> widget == button
-False
-```
-
-```python
-# PyQt5
->>> from Qt import QtCompat, QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
 >>> button.setObjectName("MySpecialButton")
 >>> pointer = QtCompat.getCppPointer(button)
@@ -304,26 +261,16 @@ False
 True
 ```
 
-Note the `False` for PySide2 and `True` for PyQt5.
+~Note the `False` for PySide2 and `True` for PyQt5.~
 
 #### QtGui.QPixmap.grabWidget
 
-The method of capturing a widget to a pixmap changed between Qt4 and Qt5.
-
-PySide and PyQt4:
-```python
-# PySide
->>> from Qt import QtGui, QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
->>> button = QtWidgets.QPushButton("Hello world")
->>> pixmap = QtGui.QPixmap.grabWidget(button)
-```
+~The method of capturing a widget to a pixmap changed between Qt4 and Qt5.~
 
 PySide2 and PyQt5
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtGui, QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
 >>> pixmap = button.grab()
 ```
@@ -333,9 +280,8 @@ PySide2 and PyQt5
 Use compatibility wrapper.
 
 ```python
-# PySide2
+# PySide2, PySide6, PyQt5, PyQt6, qapp
 >>> from Qt import QtCompat, QtWidgets
->>> app = QtWidgets.QApplication(sys.argv)
 >>> button = QtWidgets.QPushButton("Hello world")
 >>> pixmap = QtCompat.QWidget.grab(button)
 ```
