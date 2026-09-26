@@ -426,6 +426,27 @@ def subprocess_check_output(cmd, **kwargs):
     return subprocess.check_output(cmd, **kwargs)
 
 
+def test_qinstallmessagehandler():
+    """QtCompat.qInstallMessageHandler installs a working message handler"""
+    from Qt import QtCompat, QtCore
+
+    received = []
+
+    def handler(msgType, logContext, msg):
+        received.append((msgType, logContext, msg))
+
+    QtCompat.qInstallMessageHandler(handler)
+    try:
+        QtCore.qDebug("Qt.py test message")
+    finally:
+        QtCompat.qInstallMessageHandler(None)
+
+    assert received, "Message handler was never invoked"
+    msgType, logContext, msg = received[0]
+    assert isinstance(msg, str), "Expected msg to be str, got %r" % type(msg)
+    assert msg == "Qt.py test message"
+
+
 @contextlib.contextmanager
 def ignoreQtMessageHandler(msgs):
     """A context that ignores specific qMessages for all bindings

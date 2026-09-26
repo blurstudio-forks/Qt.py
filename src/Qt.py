@@ -897,33 +897,28 @@ _missing_members = {
 
 
 def _qInstallMessageHandler(handler):
-    """Install a message handler that works in all bindings
+    """Install a message handler that works in all bindings.
+
+    This wrapper likely is no longer needed and is being kept for backwards
+    compatibility. The only reason to continue using this is if something passes
+    bytes to msg, but this likely only happened in Qt4.
+
+    The handler function should have this signature:
+
+    def msg_handler(msg_type: QtMsgType, context: QMessageLogContext, msg: str) -> None:
 
     Args:
-        handler: A function that takes 3 arguments, or None
+        handler: A function that takes 3 arguments, or None. None restores the
+            default handler.
+
+    Returns:
+        The previous message handler
     """
 
-    def messageOutputHandler(*args):
-        # TODO: Can this be removed by dropping Qt4?
-        # In Qt4 bindings, message handlers are passed 2 arguments
-        # In Qt5 bindings, message handlers are passed 3 arguments
-        # The first argument is a QtMsgType
-        # The last argument is the message to be printed
-        # The Middle argument (if passed) is a QMessageLogContext
-        if len(args) == 3:
-            msgType, logContext, msg = args
-        elif len(args) == 2:
-            msgType, msg = args
-            logContext = None
-        else:
-            raise TypeError(
-                "handler expected 2 or 3 arguments, got {0}".format(len(args))
-            )
-
+    def messageOutputHandler(msgType, logContext, msg):
         if isinstance(msg, bytes):
-            # In python 3, some bindings pass a bytestring, which cannot be
-            # used elsewhere. Decoding a python 2 or 3 bytestring object will
-            # consistently return a unicode object.
+            # Some bindings pass a bytestring, which cannot be used elsewhere.
+            # Decoding a bytestring object will consistently return a str object.
             msg = msg.decode()
 
         handler(msgType, logContext, msg)
