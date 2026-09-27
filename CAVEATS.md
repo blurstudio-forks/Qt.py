@@ -6,7 +6,6 @@ There are cases where Qt.py is not handling incompatibility issues.
 - [QtCore.QItemSelection](#qtcoreqitemselection)
 - [QtCore.Slot](#qtcoreslot)
 - [QtWidgets.QAction.triggered](#qtwidgetsqactiontriggered)
-- [QtGui.QRegExpValidator](#qtguiqregexpvalidator)
 - [QtWidgets.QHeaderView.setResizeMode](#qtwidgetsqheaderviewsetresizemode)
 - [QtWidgets.qApp](#qtwidgetsqapp)
 - [QtCompat.wrapInstance](#qtcompatwrapinstance)
@@ -185,44 +184,6 @@ TypeError: triggered() only accepts 0 arguments, 2 given!
 Traceback (most recent call last):
 ...
 TypeError: QAction.triggered[bool] signal has 1 argument(s) but 0 provided
-```
-
-
-<br>
-<br>
-<br>
-
-
-#### QtGui.QRegExpValidator
-
-| Affects       | Version
-|:--------------|:-----------------
-| PyQt4         | <= 4.8.4
-
-In PySide, the constructor for `QtGui.QRegExpValidator()` can just take a `QRegExp` instance, and that is all.
-
-In PyQt4 you are required to pass some form of a parent argument, otherwise you get a TypeError:
-
-```python
-# PySide, untested
->>> from Qt import QtCore, QtGui
->>> regex = QtCore.QRegExp("\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
->>> validator = QtGui.QRegExpValidator(regex)
->>> validator = QtGui.QRegExpValidator(regex, None)
-Traceback (most recent call last):
-...
-TypeError: ...
-```
-
-```python
-# PyQt4, untested
->>> from Qt import QtCore, QtGui
->>> regex = QtCore.QRegExp("\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
->>> validator = QtGui.QRegExpValidator(regex, None)
->>> validator = QtGui.QRegExpValidator(regex)
-Traceback (most recent call last):
-...
-TypeError: ...
 ```
 
 
