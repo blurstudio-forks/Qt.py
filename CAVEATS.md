@@ -22,14 +22,15 @@ Code blocks in this document are automatically tested at each commit before bein
 
 1. Each caveat MUST contain (1) a header, (2) description, (3) one or more examples and (4, optional) a solution.
 1. Each caveat MUST have a header prefixed with four hashtags, e.g. `#### My Heading`.
-1. Each example MAY NOT use more than one (1) binding at a time, e.g. both PyQt5 and PySide.
+1. Each example MAY target more than one binding at once by listing them comma-separated on the first line, e.g. `# PySide2, PyQt5`; the same example is then run once per listed binding. This is encouraged whenever the example applies identically to more than one binding.
 1. Each example MUST visualise return value and any exceptions thrown.
 1. An example MUST reside under a heading, e.g. `#### My Heading`
-1. The first line of each example MUST be `# MyBinding`, where `MyBinding` is the binding you intend to test with, such as `PySide` or `PyQt4`.
-1. Examples MAY indicate either Python 2 or 3 as `# MyBinding, Python2`
-1. Examples MUST be in [doctest](https://docs.python.org/2.7/library/doctest.html) format. See other caveats for samples.
+1. The first line of each example MUST be `# MyBinding`, where `MyBinding` is the binding you intend to test with, such as `PySide6` or `PyQt6`.
+1. Examples MUST be in [doctest](https://docs.python.org/3.13/library/doctest.html) format. See other caveats for samples.
 1. Examples MUST `import Qt` (where appropriate), NOT e.g. `import PyQt5`.
-1. Examples MAY include `untested` in which case the continuous integration mechanism will look the other way, e.g. `# PyQt4, untested`
+1. Examples MAY include `untested` in which case the continuous integration mechanism will look the other way, e.g. `# PyQt6, untested`
+1. Examples MAY include `qapp` in which case a `QApplication` is created and destroyed for each test preventing interference with other tests., e.g. `# PyQt5, qapp`.
+1. Ellipsis (...) can be used as a wildcard for return text checking, e.g. `AttributeError: type ...`.
 
 
 <br>
@@ -57,7 +58,6 @@ True
 >>> index = model.createIndex(0, 0, -1)
 >>> int(index.internalId()) == 18446744073709551615
 True
-
 ```
 
 ##### Usecase
@@ -130,17 +130,7 @@ PySide allows for a `result=None` keyword param to set the return type. PyQt4 cr
 ```
 
 ```python
-# PyQt4, Python2
->>> from Qt import QtCore, QtWidgets
->>> slot = QtCore.Slot(QtWidgets.QWidget)
->>> slot = QtCore.Slot(QtWidgets.QWidget, result=None)
-Traceback (most recent call last):
-...
-TypeError: string or ASCII unicode expected not 'NoneType'
-```
-
-```python
-# PyQt4, Python3
+# PyQt4
 >>> from Qt import QtCore, QtWidgets
 >>> slot = QtCore.Slot(QtWidgets.QWidget)
 >>> slot = QtCore.Slot(QtWidgets.QWidget, result=None)
@@ -293,7 +283,7 @@ True
 >>> button = QtWidgets.QPushButton("Hello world")
 >>> button.setObjectName("MySpecialButton")
 >>> pointer = QtCompat.getCppPointer(button)
->>> widget = QtCompat.wrapInstance(long(pointer))
+>>> widget = QtCompat.wrapInstance(int(pointer))
 >>> assert isinstance(widget, QtWidgets.QWidget), widget
 >>> assert widget.objectName() == button.objectName()
 >>> widget == button
@@ -307,7 +297,7 @@ False
 >>> button = QtWidgets.QPushButton("Hello world")
 >>> button.setObjectName("MySpecialButton")
 >>> pointer = QtCompat.getCppPointer(button)
->>> widget = QtCompat.wrapInstance(long(pointer))
+>>> widget = QtCompat.wrapInstance(int(pointer))
 >>> assert isinstance(widget, QtWidgets.QWidget), widget
 >>> assert widget.objectName() == button.objectName()
 >>> widget == button
@@ -370,10 +360,11 @@ currently found in PySide6.
 
 PySide, PyQt4 and older releases of PySide2 and PyQt5 can only use short enums
 and are not compatible with fully qualified enum names. If you need to support Qt4
-and Qt5 then use short enum's. Unfortunately your code won't easily work with PyQt6.
+and Qt5 then use short enum's. You should also limit to `Qt.py<2`. Unfortunately
+your code won't easily work with PyQt6.
 
 For maximum compatibility with Qt5 and Qt6 moving forward, you should always use
-the fully qualified enum name. Even if you only plan to support PySide5/6 you are
+the fully qualified enum name. Even if you only plan to support PySide2/6 you are
 encouraged to use the fully qualified names for future proofing.
 
 To convert existing code from short to fully qualified enum names use the
